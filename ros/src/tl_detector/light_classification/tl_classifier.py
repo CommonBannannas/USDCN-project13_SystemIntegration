@@ -38,4 +38,4 @@ class TLClassifier(object):
         else:
             rospy.logwarn("Red Traffic Light is NOT Detected. Vehicle can go possible ~~!")
 
-            return prediction
+        return prediction
