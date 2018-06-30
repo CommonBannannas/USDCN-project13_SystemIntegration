@@ -40,7 +40,7 @@ def get_cross_track_error(final_waypoints, current_pose):
     rotated_matrix = np.dot(shifted_matrix, rotation_matrix)
 
     # Fit a 2 degree polynomial to the waypoints
-    degree = 3
+    degree = 2
     coefficients = np.polyfit(rotated_matrix[:, 0], rotated_matrix[:, 1], degree)
 
     # Transform the current pose of the car to be in the car's coordinate system
