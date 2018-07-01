@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import math
-
+import numpy as np
 from dbw_mkz_msgs.msg import ThrottleCmd, SteeringCmd, BrakeCmd, SteeringReport
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import TwistStamped
