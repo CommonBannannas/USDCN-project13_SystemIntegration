@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
+import math
+
 import cte_calculator
+from dbw_mkz_msgs.msg import ThrottleCmd, SteeringCmd, BrakeCmd, SteeringReport
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import TwistStamped
 import rospy
 from std_msgs.msg import Bool
 from styx_msgs.msg import Lane
-from dbw_mkz_msgs.msg import ThrottleCmd, SteeringCmd, BrakeCmd, SteeringReport
-from geometry_msgs.msg import TwistStamped
-import math
-
 from twist_controller import Controller
+
 
 
 class DBWNode(object):
@@ -56,25 +57,29 @@ class DBWNode(object):
         self.final_waypoints = None
         self.current_pose = None
         self.previous_loop_time = rospy.get_rostime()
-
-
-        #Topics
+        # Subscribers
         self.twist_sub = rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_message_callback, queue_size=1)
-        self.velocity_sub = rospy.Subscriber('/current_velocity', TwistStamped, self.current_velocity_callback, queue_size=1)
-        self.dbw_sub = rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_callback, queue_size=1)
-        self.final_wp_sub = rospy.Subscriber('final_waypoints', Lane, self.final_waypoints_cb, queue_size=1)
-        self.pose_sub = rospy.Subscriber('/current_pose', PoseStamped, self.current_pose_cb, queue_size=1)
 
+        self.velocity_sub = rospy.Subscriber('/current_velocity', TwistStamped, self.current_velocity_callback, queue_size=1)
+
+        self.dbw_sub = rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_callback, queue_size=1)
+
+        self.final_wp_sub = rospy.Subscriber('final_waypoints', Lane, self.final_waypoints_cb, queue_size=1)
+
+        self.pose_sub = rospy.Subscriber('/current_pose', PoseStamped, self.current_pose_cb, queue_size=1)
         self.loop()
 
     def loop(self):
-        rate = rospy.Rate(50) # 50Hz
+        # rate 50 Hz
+        rate = rospy.Rate(50)
         while not rospy.is_shutdown():
 
             if (self.current_velocity is not None) and (self.proposed_velocity is not None) and (self.final_waypoints is not None):
+                # current time
                 current_time = rospy.get_rostime()
                 ros_duration = current_time - self.previous_loop_time
                 duration_in_seconds = ros_duration.secs + (1e-9 * ros_duration.nsecs)
+
                 self.previous_loop_time = current_time
 
                 current_linear_velocity = self.current_velocity.twist.linear.x
@@ -87,7 +92,9 @@ class DBWNode(object):
                                                                     target_angular_velocity,
                                                                     current_linear_velocity, cross_track_error, duration_in_seconds)
 
-                if not self.is_dbw_enabled or abs(self.current_velocity.twist.linear.x) < 1e-5 and abs(self.proposed_velocity.twist.linear.x) < 1e-5:
+                if not self.is_dbw_enabled or \
+                         abs(self.current_velocity.twist.linear.x) < 1e-5 and \
+                         abs(self.proposed_velocity.twist.linear.x) < 1e-5:
                     self.controller.reset()
 
                 if self.is_dbw_enabled:
