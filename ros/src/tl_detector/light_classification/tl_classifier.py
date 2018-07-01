@@ -5,17 +5,21 @@ import numpy as np
 
 
 class TLClassifier(object):
-    def __init__(self):
-        self.GREEN_CHANNEL = 1
-        self.RED_CHANNEL = 2
-        self.area_thr = 80
-
     def traffic_predict(self, image):
         """
         image: cv2.Image (BGR)
         """
+        # constants
+        GREEN_CHANNEL = 1
+        RED_CHANNEL = 2
+        area_threshold = 79
+
+        # get red image
         red_img = image[:,:,self.RED_CHANNEL]
+        # get the green image
         green_img = image[:,:,self.GREEN_CHANNEL]
+
+        # get red and green areas
         red_area = np.sum(red_img == red_img.max())
         green_area = np.sum(green_img == green_img.max())
 
