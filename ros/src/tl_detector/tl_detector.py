@@ -124,7 +124,7 @@ class TLDetector(object):
         # if waypoints are empty return -1
         if self.waypoints is None:
             return -1
-        waypoints_arr = np.asarray([(w.pose.pose.position.x, w.pose.pose.position.y) for w in waypoints.waypoints])
+        waypoints_arr = np.asarray([(w.pose.pose.position.x, w.pose.pose.position.y) for w in self.waypoints])
         position = np.asarray([pos_x, pos_y])
 
         # calculate distances
