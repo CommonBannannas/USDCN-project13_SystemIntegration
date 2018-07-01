@@ -16,7 +16,7 @@ class WaypointUpdater(object):
     def __init__(self):
         rospy.init_node('waypoint_updater')
 
-        #Subscribers and Publisher
+        # Subscribers and Publisher
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         self.base_wp_sub = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
@@ -30,9 +30,9 @@ class WaypointUpdater(object):
         self.redlight_wp = None
         self.msg_seq = 0
 
-        # Parameters
-        self.stop_on_red = rospy.get_param('~stop_on_red', True)
-        self.force_stop_on_last_waypoint = rospy.get_param('~force_stop_on_last_waypoint', True)
+        # params
+        self.stop_on_red = rospy.get_param('~stop_on_red', True)      # Enable/disable stopping on red lights
+        self.force_stop_on_last_waypoint = rospy.get_param('~force_stop_on_last_waypoint', True)   # Enable/disable stopping on last waypoint
         self.unsubscribe_base_wp = rospy.get_param('/unregister_base_waypoints', False)
         self.accel = rospy.get_param('~target_brake_accel', -1.)
         self.stop_distance = rospy.get_param('~stop_distance', 5.0)
@@ -54,13 +54,17 @@ class WaypointUpdater(object):
         if not self.current_pose:
             return False
 
+        # Get car vars
         x_carpos = self.current_pose.position.x
         y_carpos = self.current_pose.position.y
         theta_carpos = math.atan2(self.current_pose.orientation.y, self.current_pose.orientation.x)
 
 
+        # look for next_waypint 
+
         wp = None
-        dist = 1000000 # Long number
+        dist = 500000
+
         if self.next_waypoint:
             idx_offset = self.next_waypoint
             full_search = False
@@ -79,9 +83,9 @@ class WaypointUpdater(object):
                 dist = wp_d
                 wp = idx
             elif not full_search:
-                # Local minimum. If the waypoint makes sense, just use it and break
                 if dist < max_local_dist:
-                    break; # We found a point
+                    # we found it
+                    break;
                 else:
                     full_search = True
 
@@ -122,6 +126,7 @@ class WaypointUpdater(object):
                     self.deaccel(final_waypoints, last_wp_idx, 0)
                 except ValueError:
                     pass
+
             self.msgPublish(final_waypoints)
 
     def pose_cb(self, msg):
@@ -132,10 +137,8 @@ class WaypointUpdater(object):
 
         waypoints = msg.waypoints
         num_wp = len(waypoints)
+        if self.base_waypoints and self.next_waypoint is not None: 
 
-        if self.base_waypoints and self.next_waypoint is not None:
-            # Normally we assume that waypoint list doesn't change (or, at least, not
-            # in the position where the car is located). If that happens, just handle it.
             if not self.sameWP(self.base_waypoints[self.next_waypoint],
                                          waypoints[self.next_waypoint]):
                 self.next_waypoint = None # We can't assume previous knowledge of waypoint
@@ -145,21 +148,23 @@ class WaypointUpdater(object):
             pass
 
         self.original_wpvel = [self.get_wpVel(waypoints, idx) for idx in range(num_wp)]
+
         self.base_waypoints = waypoints
 
         if self.unsubscribe_base_wp:
+            # unsubscribe
             self.base_wp_sub.unregister()
 
     def traffic_cb(self, msg):
 
         prev_red_light_waypoint = self.redlight_wp
         self.redlight_wp = msg.data if msg.data >= 0 else None
+        
         if prev_red_light_waypoint != self.redlight_wp:
             if light_change_pub:
                 self.updatePublish()
 
     def obstacle_cb(self, msg):
-        # Nothing to do here.
         pass
 
     def restore_velocities(self, indexes):
@@ -170,10 +175,12 @@ class WaypointUpdater(object):
 
         if stop_index <= 0:
             return
+
         dist = self.distance(waypoints, 0, stop_index)
         step = dist / stop_index
         vel = 0.
         d = 0.
+
         for idx in reversed(range(len(waypoints))):
             if idx < stop_index:
                 d += step
@@ -199,8 +206,11 @@ class WaypointUpdater(object):
 
     def sameWP(self, wp1, wp2, max_d=0.5, max_v=0.5):
 
+        # dist
         dl = lambda a, b: math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2  + (a.z-b.z)**2)
+        # dist difference
         distdif = dl(wp1.pose.pose.position, wp2.pose.pose.position)
+
         if distdif < max_d:
            return True
         return False
@@ -208,5 +218,6 @@ class WaypointUpdater(object):
 if __name__ == '__main__':
     try:
         WaypointUpdater()
+
     except rospy.ROSInterruptException:
         rospy.logerr('Could not start waypoint updater node.')
