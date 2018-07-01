@@ -6,7 +6,6 @@ import numpy as np
 
 class TLClassifier(object):
     def __init__(self):
-        #TODO load classifier
         self.GREEN_CHANNEL = 1
         self.RED_CHANNEL = 2
         self.area_thr = 80
@@ -32,10 +31,9 @@ class TLClassifier(object):
         else:
             prediction = TrafficLight.UNKNOWN
 
-        #print "Traffic Light: ",
         if prediction == TrafficLight.RED:
-            rospy.logwarn("Red Traffic Light is Detected. Vehicle must be stopped ~~!")
+            rospy.logwarn("RED!")
         else:
-            rospy.logwarn("Red Traffic Light is NOT Detected. Vehicle can go possible ~~!")
+            rospy.logwarn("No RED")
 
         return prediction
