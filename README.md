@@ -3,7 +3,7 @@ This is the project repo for the final project of the Udacity Self-Driving Car N
 
 
 
-###Team Members
+### Team Members
 
 Sergio Santoyo (**Team Lead**) [sergiosantoyo.92@gmail.com]
 
