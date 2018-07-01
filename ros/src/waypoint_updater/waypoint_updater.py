@@ -137,12 +137,15 @@ class WaypointUpdater(object):
 
         waypoints = msg.waypoints
         num_wp = len(waypoints)
+        if self.base_waypoints and self.next_waypoint is not None: 
 
-        if not self.sameWP(self.base_waypoints[self.next_waypoint],
-                                     waypoints[self.next_waypoint]):
-            self.next_waypoint = None # We can't assume previous knowledge of waypoint
-            self.base_waypoints = None
-            rospy.logwarn("Base waypoint list changed")
+            if not self.sameWP(self.base_waypoints[self.next_waypoint],
+                                         waypoints[self.next_waypoint]):
+                self.next_waypoint = None # We can't assume previous knowledge of waypoint
+                self.base_waypoints = None
+                rospy.logwarn("Base waypoint list changed")
+        else:
+            pass
 
         self.original_wpvel = [self.get_wpVel(waypoints, idx) for idx in range(num_wp)]
 
