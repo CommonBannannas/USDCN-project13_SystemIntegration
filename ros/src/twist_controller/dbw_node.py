@@ -11,22 +11,6 @@ import math
 
 from twist_controller import Controller
 
-'''
-You can build this node only after you have built (or partially built) the `waypoint_updater` node.
-You will subscribe to `/twist_cmd` message which provides the proposed linear and angular velocities.
-You can subscribe to any other message that you find important or refer to the document for list
-of messages subscribed to by the reference implementation of this node.
-One thing to keep in mind while building this node and the `twist_controller` class is the status
-of `dbw_enabled`. While in the simulator, its enabled all the time, in the real car, that will
-not be the case. This may cause your PID controller to accumulate error because the car could
-temporarily be driven by a human instead of your controller.
-We have provided two launch files with this node. Vehicle specific values (like vehicle_mass,
-wheel_base) etc should not be altered in these files.
-We have also provided some reference implementations for PID controller and other utility classes.
-You are free to use them or build your own.
-Once you have the proposed throttle, brake, and steer values, publish it on the various publishers
-that we have created in the `__init__` function.
-'''
 
 class DBWNode(object):
     def __init__(self):
@@ -64,7 +48,6 @@ class DBWNode(object):
         self.brake_pub = rospy.Publisher('/vehicle/brake_cmd',
                                          BrakeCmd, queue_size=1)
 
-        # Create `TwistController` object
         self.controller = Controller(**config)
 
         self.is_dbw_enabled = False
@@ -75,7 +58,7 @@ class DBWNode(object):
         self.previous_loop_time = rospy.get_rostime()
 
 
-        # Subscribe to all the topics you need to
+        #Topics
         self.twist_sub = rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_message_callback, queue_size=1)
         self.velocity_sub = rospy.Subscriber('/current_velocity', TwistStamped, self.current_velocity_callback, queue_size=1)
         self.dbw_sub = rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_callback, queue_size=1)
@@ -87,8 +70,7 @@ class DBWNode(object):
     def loop(self):
         rate = rospy.Rate(50) # 50Hz
         while not rospy.is_shutdown():
-            # Get predicted throttle, brake, and steering using `twist_controller`
-            # You should only publish the control commands if dbw is enabled
+
             if (self.current_velocity is not None) and (self.proposed_velocity is not None) and (self.final_waypoints is not None):
                 current_time = rospy.get_rostime()
                 ros_duration = current_time - self.previous_loop_time
@@ -106,8 +88,6 @@ class DBWNode(object):
                                                                     current_linear_velocity, cross_track_error, duration_in_seconds)
 
                 if not self.is_dbw_enabled or abs(self.current_velocity.twist.linear.x) < 1e-5 and abs(self.proposed_velocity.twist.linear.x) < 1e-5:
-                    # rospy.logwarn('reset controller (DBW {}, current veolocity {}, proposed velocity {})'.format(
-                    #     self.is_dbw_enabled, self.current_velocity.twist.linear.x, self.proposed_velocity.twist.linear.x))
                     self.controller.reset()
 
                 if self.is_dbw_enabled:
