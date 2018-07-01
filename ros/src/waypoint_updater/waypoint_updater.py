@@ -34,7 +34,7 @@ PUBLISH_RATE is set to 20 Hz. Under this conditions, the car shouldn't move
 more than 1-2 waypoints between consecutive calls.
 """
 # Implentation parameters
-LOOKAHEAD_WPS = 200    # Number of waypoints we will publish
+LOOKAHEAD_WPS = 100    # Number of waypoints we will publish
 PUBLISH_RATE = 20      # Publishing rate (Hz)
 
 max_local_distance = 20.0      # Max waypoint distance we admit for a local minimum (m)
