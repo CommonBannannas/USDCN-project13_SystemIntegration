@@ -23,19 +23,19 @@ class WaypointUpdater(object):
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
         # State variables
-        self.base_waypoints = []  # List of waypoints, as received from /base_waypoints
-        self.original_wpvel = []  # Original velocities of the waypoints
-        self.next_waypoint = None # Next waypoint in car direction
-        self.current_pose = None # Car pose
-        self.redlight_wp = None # Waypoint index of the next red light
-        self.msg_seq = 0 # Sequence number of /final_waypoints message
+        self.base_waypoints = []
+        self.original_wpvel = []
+        self.next_waypoint = None
+        self.current_pose = None
+        self.redlight_wp = None
+        self.msg_seq = 0
 
         # Parameters
-        self.stop_on_red = rospy.get_param('~stop_on_red', True)      # Enable/disable stopping on red lights
-        self.force_stop_on_last_waypoint = rospy.get_param('~force_stop_on_last_waypoint', True)   # Enable/disable stopping on last waypoint
+        self.stop_on_red = rospy.get_param('~stop_on_red', True)
+        self.force_stop_on_last_waypoint = rospy.get_param('~force_stop_on_last_waypoint', True)
         self.unsubscribe_base_wp = rospy.get_param('/unregister_base_waypoints', False)
-        self.accel = rospy.get_param('~target_brake_accel', -1.)     # Target brake acceleration
-        self.stop_distance = rospy.get_param('~stop_distance', 5.0)  # Distance (m) where car will stop before red light
+        self.accel = rospy.get_param('~target_brake_accel', -1.)
+        self.stop_distance = rospy.get_param('~stop_distance', 5.0)
         try:
             self.accel = max(rospy.get_param('/dbw_node/decel_limit') / 2, self.accel)
         except KeyError:
@@ -54,12 +54,11 @@ class WaypointUpdater(object):
         if not self.current_pose:
             return False
 
-        # Get ego car variables
         x_carpos = self.current_pose.position.x
         y_carpos = self.current_pose.position.y
         theta_carpos = math.atan2(self.current_pose.orientation.y, self.current_pose.orientation.x)
-        # If we do have a next_waypoint, we start looking from it, and we stop looking
-        # as soon as we get a local minimum. Otherwise we do a full search across the whole track
+
+
         wp = None
         dist = 1000000 # Long number
         if self.next_waypoint:
